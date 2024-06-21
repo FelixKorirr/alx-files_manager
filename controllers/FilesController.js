@@ -2,7 +2,9 @@ import { tmpdir } from 'os';
 import { promisify } from 'util';
 import Queue from 'bull/lib/queue';
 import { v4 as uuidv4 } from 'uuid';
-import { mkdir, writeFile, stat, existsSync, realpath } from 'fs';
+import {
+  mkdir, writeFile, stat, existsSync, realpath,
+} from 'fs';
 import { join as joinPath } from 'path';
 import { contentType } from 'mime-types';
 import mongoDBCore from 'mongodb/lib/core';
@@ -56,8 +58,7 @@ export default class FilesController {
     const { user } = req;
     const name = req.body ? req.body.name : null;
     const type = req.body ? req.body.type : null;
-    const parentId =
-      req.body && req.body.parentId ? req.body.parentId : ROOT_FOLDER_ID;
+    const parentId = req.body && req.body.parentId ? req.body.parentId : ROOT_FOLDER_ID;
     const isPublic = req.body && req.body.isPublic ? req.body.isPublic : false;
     const base64Data = req.body && req.body.data ? req.body.data : '';
 
@@ -77,9 +78,7 @@ export default class FilesController {
       const file = await (
         await clientDb.filesCollection()
       ).findOne({
-        _id: new mongoDBCore.BSON.ObjectId(
-          isValidId(parentId) ? parentId : NULL_ID
-        ),
+        _id: new mongoDBCore.BSON.ObjectId(isValidId(parentId) ? parentId : NULL_ID),
       });
 
       if (!file) {
@@ -92,10 +91,9 @@ export default class FilesController {
       }
     }
     const userId = user._id.toString();
-    const baseDir =
-      `${process.env.FOLDER_PATH || ''}`.trim().length > 0
-        ? process.env.FOLDER_PATH.trim()
-        : joinPath(tmpdir(), DEFAULT_ROOT_FOLDER);
+    const baseDir = `${process.env.FOLDER_PATH || ''}`.trim().length > 0
+      ? process.env.FOLDER_PATH.trim()
+      : joinPath(tmpdir(), DEFAULT_ROOT_FOLDER);
     // default baseDir == '/tmp/files_manager'
     // or (on Windows) '%USERPROFILE%/AppData/Local/Temp/files_manager';
     const newFile = {
@@ -114,9 +112,7 @@ export default class FilesController {
       await writeFileAsync(localPath, Buffer.from(base64Data, 'base64'));
       newFile.localPath = localPath;
     }
-    const insertionInfo = await (
-      await clientDb.filesCollection()
-    ).insertOne(newFile);
+    const insertionInfo = await (await clientDb.filesCollection()).insertOne(newFile);
     const fileId = insertionInfo.insertedId.toString();
     // start thumbnail generation worker
     if (type === VALID_FILE_TYPES.image) {
@@ -130,9 +126,7 @@ export default class FilesController {
       type,
       isPublic,
       parentId:
-        parentId === ROOT_FOLDER_ID || parentId === ROOT_FOLDER_ID.toString()
-          ? 0
-          : parentId,
+        parentId === ROOT_FOLDER_ID || parentId === ROOT_FOLDER_ID.toString() ? 0 : parentId,
     });
   }
 
@@ -144,9 +138,7 @@ export default class FilesController {
       await clientDb.filesCollection()
     ).findOne({
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
-      userId: new mongoDBCore.BSON.ObjectId(
-        isValidId(userId) ? userId : NULL_ID
-      ),
+      userId: new mongoDBCore.BSON.ObjectId(isValidId(userId) ? userId : NULL_ID),
     });
 
     if (!file) {
@@ -159,10 +151,7 @@ export default class FilesController {
       name: file.name,
       type: file.type,
       isPublic: file.isPublic,
-      parentId:
-        file.parentId === ROOT_FOLDER_ID.toString()
-          ? 0
-          : file.parentId.toString(),
+      parentId: file.parentId === ROOT_FOLDER_ID.toString() ? 0 : file.parentId.toString(),
     });
   }
 
@@ -182,9 +171,7 @@ export default class FilesController {
       parentId:
         parentId === ROOT_FOLDER_ID.toString()
           ? parentId
-          : new mongoDBCore.BSON.ObjectId(
-              isValidId(parentId) ? parentId : NULL_ID
-            ),
+          : new mongoDBCore.BSON.ObjectId(isValidId(parentId) ? parentId : NULL_ID),
     };
 
     const files = await (
@@ -223,9 +210,7 @@ export default class FilesController {
     const userId = user._id.toString();
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
-      userId: new mongoDBCore.BSON.ObjectId(
-        isValidId(userId) ? userId : NULL_ID
-      ),
+      userId: new mongoDBCore.BSON.ObjectId(isValidId(userId) ? userId : NULL_ID),
     };
     const file = await (await clientDb.filesCollection()).findOne(fileFilter);
 
@@ -233,19 +218,14 @@ export default class FilesController {
       res.status(404).json({ error: 'Not found' });
       return;
     }
-    await (
-      await clientDb.filesCollection()
-    ).updateOne(fileFilter, { $set: { isPublic: true } });
+    await (await clientDb.filesCollection()).updateOne(fileFilter, { $set: { isPublic: true } });
     res.status(200).json({
       id,
       userId,
       name: file.name,
       type: file.type,
       isPublic: true,
-      parentId:
-        file.parentId === ROOT_FOLDER_ID.toString()
-          ? 0
-          : file.parentId.toString(),
+      parentId: file.parentId === ROOT_FOLDER_ID.toString() ? 0 : file.parentId.toString(),
     });
   }
 
@@ -255,9 +235,7 @@ export default class FilesController {
     const userId = user._id.toString();
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
-      userId: new mongoDBCore.BSON.ObjectId(
-        isValidId(userId) ? userId : NULL_ID
-      ),
+      userId: new mongoDBCore.BSON.ObjectId(isValidId(userId) ? userId : NULL_ID),
     };
     const file = await (await clientDb.filesCollection()).findOne(fileFilter);
 
@@ -265,19 +243,14 @@ export default class FilesController {
       res.status(404).json({ error: 'Not found' });
       return;
     }
-    await (
-      await clientDb.filesCollection()
-    ).updateOne(fileFilter, { $set: { isPublic: false } });
+    await (await clientDb.filesCollection()).updateOne(fileFilter, { $set: { isPublic: false } });
     res.status(200).json({
       id,
       userId,
       name: file.name,
       type: file.type,
       isPublic: false,
-      parentId:
-        file.parentId === ROOT_FOLDER_ID.toString()
-          ? 0
-          : file.parentId.toString(),
+      parentId: file.parentId === ROOT_FOLDER_ID.toString() ? 0 : file.parentId.toString(),
     });
   }
 
@@ -319,10 +292,7 @@ export default class FilesController {
       return;
     }
     const absoluteFilePath = await realpathAsync(filePath);
-    res.setHeader(
-      'Content-Type',
-      contentType(file.name) || 'text/plain; charset=utf-8'
-    );
+    res.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
     res.status(200).sendFile(absoluteFilePath);
   }
 }
